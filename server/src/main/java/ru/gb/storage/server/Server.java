@@ -43,6 +43,7 @@ public class Server {
                 if (selectionKey.isReadable()) {
                     System.out.println("New selector readable event");
                     readMessage(selectionKey);
+
                 }
                 iterator.remove();
             }
@@ -62,5 +63,14 @@ public class Server {
         client.read(byteBuffer);
         String message = new String(byteBuffer.array());
         System.out.println("New message: " + message + " Thread name: " + Thread.currentThread().getName());
+        writeMessage(message, key);
+    }
+
+    public void writeMessage(String message, SelectionKey key) throws IOException {
+        SocketChannel client = (SocketChannel) key.channel();
+        String echo = "\nServer say: " + message;
+        ByteBuffer buffer = ByteBuffer.wrap(echo.getBytes());
+        client.write(buffer);
+        System.out.println("ECHO");
     }
 }
