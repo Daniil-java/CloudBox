@@ -17,6 +17,7 @@ import ru.gb.storage.commons.handler.JsonEncoder;
 import ru.gb.storage.commons.message.DownloadFileRequestMessage;
 import ru.gb.storage.commons.message.FileMessage;
 import ru.gb.storage.commons.message.Message;
+import ru.gb.storage.commons.message.TextMessage;
 
 import java.io.RandomAccessFile;
 import java.util.Date;
@@ -64,25 +65,13 @@ public class LiteClient {
 
             Channel channel = bootstrap.connect("localhost", 9000).sync().channel();
 
-            final DownloadFileRequestMessage message = new DownloadFileRequestMessage();
-            message.setPath("C:\\Java\\network-storage-template-master\\commons\\src\\main\\java\\ru\\gb\\storage\\commons\\message\\test.json");
-            channel.writeAndFlush(message);
+//            final DownloadFileRequestMessage message = new DownloadFileRequestMessage();
+//            message.setPath("C:\\Java\\network-storage-template-master\\commons\\src\\main\\java\\ru\\gb\\storage\\commons\\message\\test.json");
+//            channel.writeAndFlush(message);
 
-
-//            Scanner scanner = new Scanner(System.in);
-//
-//            while (true) {
-//                System.out.println("Введите ваше сообщение");
-//                if (scanner.hasNextLine()) {
-//                    String msg = scanner.nextLine();
-//                    if (msg.equals(EXIT_WORD)) {
-//                        scanner.close();
-//                        channel.close();
-//                        break;
-//                    }
-//                    channel.writeAndFlush(msg);
-//                }
-//            }
+            TextMessage textMessage = new TextMessage();
+            textMessage.setText("/download");
+            channel.writeAndFlush(textMessage);
         } finally {
             worker.shutdownGracefully();
         }

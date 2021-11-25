@@ -39,13 +39,23 @@ public class ServerHandler extends SimpleChannelInboundHandler<Message> {
             var message = (DownloadFileRequestMessage) msg;
             System.out.println("Файл получен сервером");
             try (RandomAccessFile randomAccessFile = new RandomAccessFile(message.getPath(), "r")) {
-                System.out.println("LOG");
                 final FileMessage fileMessage = new FileMessage();
                 byte[] content = new byte[(int) randomAccessFile.length()];
                 randomAccessFile.read(content);
                 fileMessage.setContent(content);
                 ctx.writeAndFlush(fileMessage);
-                System.out.println("LOG11");
+            }
+        }
+        if (msg instanceof TextMessage  && (((TextMessage) msg).getText().equals("/download"))) {
+            DownloadFileRequestMessage downloadFileRequestMessage = new DownloadFileRequestMessage();
+            downloadFileRequestMessage.setPath("C:\\Java\\network-storage-template-master\\commons\\src\\main\\java\\ru\\gb\\storage\\commons\\message\\test.json");;
+            try(RandomAccessFile randomAccessFile = new RandomAccessFile(downloadFileRequestMessage.getPath(), "r")) {
+                final FileMessage fileMessage = new FileMessage();
+                byte[] content = new byte[(int) randomAccessFile.length()];
+                randomAccessFile.read(content);
+                fileMessage.setContent(content);
+                ctx.writeAndFlush(fileMessage);
+                System.out.println("Отправка Файла");
             }
         }
         if (msg instanceof TextMessage) {
