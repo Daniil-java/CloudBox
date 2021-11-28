@@ -12,7 +12,14 @@ import io.netty.handler.codec.bytes.ByteArrayDecoder;
 import io.netty.handler.codec.bytes.ByteArrayEncoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
+import ru.gb.storage.commons.handler.JsonDecoder;
+import ru.gb.storage.commons.handler.JsonEncoder;
+import ru.gb.storage.commons.message.DownloadFileRequestMessage;
+import ru.gb.storage.commons.message.FileMessage;
+import ru.gb.storage.commons.message.Message;
+import ru.gb.storage.commons.message.TextMessage;
 
+import java.io.RandomAccessFile;
 import java.util.Date;
 import java.util.Scanner;
 
@@ -36,12 +43,19 @@ public class LiteClient {
                             ch.pipeline().addLast(
                                     new LengthFieldBasedFrameDecoder(512, 0, 2, 0, 2),
                                     new LengthFieldPrepender(2),
-                                    new StringEncoder(),
-                                    new StringDecoder(),
-                                    new SimpleChannelInboundHandler<String>() {
+                                    new JsonEncoder(),
+                                    new JsonDecoder(),
+                                    new SimpleChannelInboundHandler<Message>() {
                                         @Override
-                                        protected void channelRead0(ChannelHandlerContext channelHandlerContext, String msg) throws Exception {
-                                            System.out.println("Incoming message: " + msg);
+                                        protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
+                                            if(msg instanceof FileMessage) {
+                                                var message = (FileMessage) msg;
+                                                try (RandomAccessFile randomAccessFile = new RandomAccessFile("1", "rw")) {
+                                                    randomAccessFile.write(message.getContent());
+                                                    System.out.println("Файл");
+                                                }
+                                                ctx.close();
+                                            }
                                         }
                                     }
                             );
@@ -51,20 +65,13 @@ public class LiteClient {
 
             Channel channel = bootstrap.connect("localhost", 9000).sync().channel();
 
-            Scanner scanner = new Scanner(System.in);
+//            final DownloadFileRequestMessage message = new DownloadFileRequestMessage();
+//            message.setPath("C:\\Java\\network-storage-template-master\\commons\\src\\main\\java\\ru\\gb\\storage\\commons\\message\\test.json");
+//            channel.writeAndFlush(message);
 
-            while (true) {
-                System.out.println("Введите ваше сообщение");
-                if (scanner.hasNextLine()) {
-                    String msg = scanner.nextLine();
-                    if (msg.equals(EXIT_WORD)) {
-                        scanner.close();
-                        channel.close();
-                        break;
-                    }
-                    channel.writeAndFlush(msg);
-                }
-            }
+            TextMessage textMessage = new TextMessage();
+            textMessage.setText("/download");
+            channel.writeAndFlush(textMessage);
         } finally {
             worker.shutdownGracefully();
         }
