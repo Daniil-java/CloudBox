@@ -15,6 +15,8 @@ import io.netty.handler.codec.bytes.ByteArrayDecoder;
 import io.netty.handler.codec.bytes.ByteArrayEncoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
+import ru.gb.storage.commons.handler.JsonDecoder;
+import ru.gb.storage.commons.handler.JsonEncoder;
 
 public class LiteServer {
 
@@ -38,13 +40,10 @@ public class LiteServer {
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
                             ch.pipeline().addLast(
-//                                    new LineBasedFrameDecoder(128),
                                     new LengthFieldBasedFrameDecoder(512, 0, 2, 0, 2),
                                     new LengthFieldPrepender(2),
-                                    new ByteArrayDecoder(),
-                                    new ByteArrayEncoder(),
-                                    new LiteServerStringDecoder(),
-                                    new LiteServerStringEncoder(),
+                                    new JsonDecoder(),
+                                    new JsonEncoder(),
                                     new ServerHandler());
                         }
                     })

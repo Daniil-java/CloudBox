@@ -5,10 +5,14 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.ReferenceCountUtil;
+import ru.gb.storage.commons.message.*;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.Date;
 
-public class ServerHandler extends SimpleChannelInboundHandler<String> {
+public class ServerHandler extends SimpleChannelInboundHandler<Message> {
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
         System.out.println("channelRegistered");
@@ -30,29 +34,36 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
-        System.out.println("Incoming message: " + msg);
-        ctx.writeAndFlush(msg + " " + new Date());
+    protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws IOException {
+        if (msg instanceof DownloadFileRequestMessage) {
+            var message = (DownloadFileRequestMessage) msg;
+            System.out.println("Файл получен сервером");
+            try (RandomAccessFile randomAccessFile = new RandomAccessFile(message.getPath(), "r")) {
+                System.out.println("LOG");
+                final FileMessage fileMessage = new FileMessage();
+                byte[] content = new byte[(int) randomAccessFile.length()];
+                randomAccessFile.read(content);
+                fileMessage.setContent(content);
+                ctx.writeAndFlush(fileMessage);
+                System.out.println("LOG11");
+            }
+        }
+        if (msg instanceof TextMessage) {
+            TextMessage message = (TextMessage) msg;
+            System.out.println("incoming text message: " + message.getText());
+            ctx.writeAndFlush(msg);
+        }
+        if (msg instanceof DateMessage) {
+            DateMessage message = (DateMessage) msg;
+            System.out.println("incoming date message: " + message.getDate());
+            ctx.writeAndFlush(msg);
+        }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+
         System.out.println("Catch cause " + cause.getMessage());
         ctx.close();
-    }
-
-    @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-        super.channelReadComplete(ctx);
-    }
-
-    @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-        super.userEventTriggered(ctx, evt);
-    }
-
-    @Override
-    public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
-        super.channelWritabilityChanged(ctx);
     }
 }
